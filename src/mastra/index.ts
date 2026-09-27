@@ -6,12 +6,31 @@ import { DuckDBStore } from "@mastra/duckdb";
 import { MastraCompositeStore } from '@mastra/core/storage';
 import { Observability, MastraStorageExporter, MastraPlatformExporter, SensitiveDataFilter } from '@mastra/observability';
 import { weatherWorkflow } from './workflows/weather-workflow';
+import { awsCostAgent } from './agents/aws-cost-agent';
+import {
+  cloudFrontCostAgent,
+  cloudWatchCostAgent,
+  loadBalancerCostAgent,
+  rdsCostAgent,
+  s3CostAgent,
+} from './agents/aws-service-cost-agents';
 import { weatherAgent } from './agents/weather-agent';
 
 
 export const mastra = new Mastra({
   workflows: { weatherWorkflow },
-  agents: { weatherAgent },
+  agents: {
+    awsCostAgent,
+    cloudFrontCostAgent,
+    cloudWatchCostAgent,
+    loadBalancerCostAgent,
+    rdsCostAgent,
+    s3CostAgent,
+    weatherAgent,
+  },
+  scheduler: {
+    enabled: true,
+  },
   storage: new MastraCompositeStore({
     id: 'composite-storage',
     default: new LibSQLStore({

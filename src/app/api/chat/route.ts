@@ -1,23 +1,38 @@
 import { handleChatStream } from '@mastra/ai-sdk'
-import { toAISdkMessages } from '@mastra/ai-sdk/ui'
 import { createUIMessageStreamResponse } from 'ai'
-import { mastra } from '@/mastra'
 import { NextResponse } from 'next/server'
 
-const THREAD_ID = 'example-user-id'
-const RESOURCE_ID = 'weather-chat'
+import { isAwsCostAnalysisAgentId } from '@/lib/aws-cost-analysis-agents'
+import { mastra } from '@/mastra'
+import { getVultrInferenceConfigurationError } from '@/mastra/models/vultr-inference'
+
+const RESOURCE_ID = 'aws-cost-analysis'
 
 export async function POST(req: Request) {
   const params = await req.json()
+
+  if (!isAwsCostAnalysisAgentId(params.agentId)) {
+    return NextResponse.json(
+      { error: 'Select a supported AWS cost analysis agent.' },
+      { status: 400 },
+    )
+  }
+
+  const configurationError = getVultrInferenceConfigurationError()
+
+  if (configurationError) {
+    return NextResponse.json({ error: configurationError }, { status: 503 })
+  }
+
   const stream = await handleChatStream({
     mastra,
-    agentId: 'weather-agent',
+    agentId: params.agentId,
     version: 'v7',
     params: {
       ...params,
       memory: {
         ...params.memory,
-        thread: THREAD_ID,
+        thread: params.agentId,
         resource: RESOURCE_ID,
       },
     },
@@ -26,19 +41,5 @@ export async function POST(req: Request) {
 }
 
 export async function GET() {
-  const memory = await mastra.getAgentById('weather-agent').getMemory()
-  let response = null
-
-  try {
-    response = await memory?.recall({
-      threadId: THREAD_ID,
-      resourceId: RESOURCE_ID,
-    })
-  } catch {
-    console.log('No previous messages found.')
-  }
-
-  const uiMessages = toAISdkMessages(response?.messages || [], { version: 'v7' })
-
-  return NextResponse.json(uiMessages)
+  return NextResponse.json([])
 }

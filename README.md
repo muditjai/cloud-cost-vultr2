@@ -2,6 +2,38 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+## Environment
+
+Set your Vultr Serverless Inference subscription API key in your local `.env`
+file before running an agent. Do not use the main Vultr account API key or an
+OpenAI key, and do not commit this value.
+
+```bash
+VULTR_INFERENCE_API_KEY=your_vultr_inference_api_key
+```
+
+Restart the development server after changing `.env`.
+
+The cost agents use a bounded heavy-analysis profile by default: up to eight
+agent steps and 32,000 output tokens per model response. To use a different
+budget, set an integer from 1 through 160,000 and restart the server:
+
+```bash
+VULTR_HEAVY_MAX_OUTPUT_TOKENS=32000
+```
+
+Heavy analysis uses Mastra Code Mode with an isolated QuickJS runtime. Model-
+generated code can only orchestrate the registered read-only AWS tools; it has
+no filesystem, shell, process, or network access.
+
+## Scheduled analyses
+
+The dashboard can persist a daily or weekly schedule for any cost-analysis
+agent. Schedules are stored by Mastra and use the same read-only AWS tools as
+manual runs. Mastra's built-in scheduler needs a long-running Node process;
+it is suitable for local development and long-lived servers, but not a
+serverless process that is frozen between requests.
+
 First, run the development server:
 
 ```bash
