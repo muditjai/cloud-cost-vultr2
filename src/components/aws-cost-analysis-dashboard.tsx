@@ -91,18 +91,18 @@ export function AwsCostAnalysisDashboard() {
         {isRunning ? (
           <div
             aria-live="polite"
-            className="sticky top-3 z-50 rounded-lg border border-primary/25 bg-primary/95 px-4 py-3 shadow-md backdrop-blur"
+            className="sticky top-3 z-50 rounded-lg border border-sky-400/40 bg-card/95 px-4 py-3 shadow-md backdrop-blur"
             role="status"
           >
             <div className="flex items-center justify-between gap-3 text-sm">
               <div className="flex items-center gap-2 font-medium">
-                <Spinner className="text-primary" />
+                <Spinner className="text-sky-500" />
                 <span>Agent is working</span>
               </div>
               <span className="text-xs text-muted-foreground">Streaming tool results</span>
             </div>
-            <div className="mt-3 h-1 overflow-hidden rounded-full bg-primary/15">
-              <div className="h-full w-2/3 rounded-full bg-primary animate-pulse" />
+            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-sky-100 dark:bg-sky-950">
+              <div className="h-full w-2/3 rounded-full bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 animate-pulse" />
             </div>
           </div>
         ) : null}
