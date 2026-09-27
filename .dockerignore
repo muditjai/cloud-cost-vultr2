@@ -1,0 +1,7 @@
+.env*
+.git
+.next
+.cache
+node_modules
+mastra.db*
+*.tsbuildinfo

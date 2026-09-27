@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   // DuckDB loads a platform-specific native binary at runtime.
   // Keep it out of Turbopack's server bundle so Node resolves that binary.
   serverExternalPackages: ["@mastra/duckdb"],

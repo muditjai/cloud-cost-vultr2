@@ -37,7 +37,9 @@ export const mastra = new Mastra({
       id: "mastra-storage",
       // Uses a hosted database when deployed (mastra env db create --kind turso),
       // and a local file during development.
-      url: process.env.TURSO_DATABASE_URL ?? "file:/home/muditjai/src/cloud-cost-vultr2/mastra.db",
+      url: process.env.TURSO_DATABASE_URL
+        ?? process.env.MASTRA_DATABASE_URL
+        ?? `file:${process.cwd()}/mastra.db`,
       authToken: process.env.TURSO_AUTH_TOKEN,
     }),
     domains: {

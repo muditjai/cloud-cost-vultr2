@@ -2,7 +2,7 @@ export const awsCostAnalysisAgents = [
   {
     description: 'Find the five highest-cost AWS services for the current billing period.',
     id: 'aws-cost-agent',
-    label: 'Account overview',
+    label: 'Analyze account bill and services',
     prompt:
       'Analyze the current AWS billing period. Identify the five highest-cost services, explain the main cost drivers visible in the billing data, and suggest which service analysis to run first.',
   },
