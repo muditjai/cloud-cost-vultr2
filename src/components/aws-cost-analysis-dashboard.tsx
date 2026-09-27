@@ -91,7 +91,7 @@ export function AwsCostAnalysisDashboard() {
         {isRunning ? (
           <div
             aria-live="polite"
-            className="rounded-lg border border-primary/25 bg-primary/5 px-4 py-3"
+            className="sticky top-3 z-50 rounded-lg border border-primary/25 bg-primary/95 px-4 py-3 shadow-md backdrop-blur"
             role="status"
           >
             <div className="flex items-center justify-between gap-3 text-sm">
