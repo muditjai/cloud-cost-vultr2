@@ -1,7 +1,7 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport, type ToolUIPart } from 'ai';
+import { DefaultChatTransport } from 'ai';
 import { useState } from 'react';
 
 import { AgentRunTimeline } from '@/components/agent-run-timeline';
@@ -15,13 +15,6 @@ import {
   Message,
   MessageContent,
 } from '@/components/ai-elements/message';
-import {
-  Tool,
-  ToolContent,
-  ToolHeader,
-  ToolInput,
-  ToolOutput,
-} from '@/components/ai-elements/tool';
 
 const initialAgent = awsCostAnalysisAgents[0];
 
@@ -29,6 +22,7 @@ export function AwsCostAnalysisDashboard() {
   const [activeAgentId, setActiveAgentId] =
     useState<AwsCostAnalysisAgentId>(initialAgent.id);
   const [input, setInput] = useState<string>(initialAgent.prompt);
+  const [useFreshAwsData, setUseFreshAwsData] = useState(false);
   const [transport] = useState(
     () => new DefaultChatTransport({ api: '/api/chat' }),
   );
@@ -61,7 +55,13 @@ export function AwsCostAnalysisDashboard() {
       return;
     }
 
-    await sendMessage({ text: prompt }, { body: { agentId: activeAgentId } });
+    const freshData = useFreshAwsData;
+
+    setUseFreshAwsData(false);
+    await sendMessage(
+      { text: prompt },
+      { body: { agentId: activeAgentId, freshData } },
+    );
   }
 
   return (
@@ -75,8 +75,7 @@ export function AwsCostAnalysisDashboard() {
           </p>
         </header>
 
-        <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-          <div className="rounded-xl border bg-card p-5 shadow-sm">
+        <section className="rounded-xl border bg-card p-5 shadow-sm">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
               <label className="flex-1 text-sm font-medium" htmlFor="analysis-agent">
                 Agent
@@ -115,22 +114,44 @@ export function AwsCostAnalysisDashboard() {
               />
             </label>
             <p className="mt-3 text-xs text-muted-foreground">Read-only: no AWS resources will be changed.</p>
-          </div>
-
-          <aside className="rounded-xl border bg-card p-5 shadow-sm">
-            <h2 className="font-semibold">Agent activity</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Tool calls appear here as the run progresses.</p>
-            <div className="mt-5">
-              <AgentRunTimeline messages={messages} status={status} />
-            </div>
-          </aside>
+            <details className="mt-4 rounded-md border bg-muted/20 px-3 py-2">
+              <summary className="cursor-pointer text-sm font-medium">
+                Run settings
+              </summary>
+              <label className="mt-3 flex cursor-pointer items-start gap-3 text-sm">
+                <input
+                  checked={useFreshAwsData}
+                  className="mt-0.5 size-4 accent-primary"
+                  disabled={isRunning}
+                  onChange={event => setUseFreshAwsData(event.target.checked)}
+                  type="checkbox"
+                />
+                <span className="font-medium">Refresh</span>
+              </label>
+              <AwsCostSchedulePanel
+                agentId={activeAgentId}
+                disabled={isRunning}
+                prompt={input}
+              />
+            </details>
         </section>
 
-        <AwsCostSchedulePanel
-          agentId={activeAgentId}
-          disabled={isRunning}
-          prompt={input}
-        />
+        <section className="rounded-xl border bg-card p-5 shadow-sm">
+          <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+            <div>
+              <h2 className="font-semibold">Agent activity</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Expand each tool call to inspect its request, cached result, and status.
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Demo cache reuses current-month AWS results for 30 days by default.
+            </p>
+          </div>
+          <div className="mt-5">
+            <AgentRunTimeline messages={messages} status={status} />
+          </div>
+        </section>
 
         <section className="rounded-xl border bg-card shadow-sm">
           <div className="border-b px-5 py-4">
@@ -161,27 +182,6 @@ export function AwsCostAnalysisDashboard() {
                             <AwsCostAnalysisReport>{part.text}</AwsCostAnalysisReport>
                           </MessageContent>
                         </Message>
-                      );
-                    }
-
-                    if (part.type.startsWith('tool-')) {
-                      const toolPart = part as ToolUIPart;
-
-                      return (
-                        <Tool key={`${message.id}-${index}`}>
-                          <ToolHeader
-                            className="cursor-pointer"
-                            state={toolPart.state || 'output-available'}
-                            type={toolPart.type}
-                          />
-                          <ToolContent>
-                            <ToolInput input={toolPart.input || {}} />
-                            <ToolOutput
-                              errorText={toolPart.errorText}
-                              output={toolPart.output}
-                            />
-                          </ToolContent>
-                        </Tool>
                       );
                     }
 

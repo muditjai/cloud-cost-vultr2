@@ -20,12 +20,20 @@ const serviceUsageInputSchema = costPeriodInputSchema.extend({
     .max(20)
     .default(10)
     .describe('Number of highest-cost usage types to return.'),
+  refresh: z
+    .boolean()
+    .default(false)
+    .describe('Bypass the local cache and query AWS Cost Explorer now. Use only for an explicitly requested refresh.'),
   service: z
     .enum(awsCostServices)
     .describe('The AWS service to analyze.'),
 });
 
 const serviceUsageOutputSchema = z.object({
+  dataSource: z.object({
+    cachedAt: z.string().optional(),
+    source: z.enum(['exact-cache', 'live-aws', 'similar-cache']),
+  }),
   estimated: z.boolean(),
   period: z.object({
     endDate: z.string(),
@@ -52,7 +60,7 @@ export const awsServiceUsageTool = createTool({
     const period = getCostPeriod(input);
 
     try {
-      const response = await getCachedCostExplorerResponse(
+      const cachedResult = await getCachedCostExplorerResponse(
         { groupBy: 'USAGE_TYPE', period, service: input.service },
         () =>
           costExplorer.send(
@@ -83,9 +91,11 @@ export const awsServiceUsageTool = createTool({
                 Start: period.startDate,
               },
             })
-          )
+          ),
+        { refresh: input.refresh }
       );
 
+      const response = cachedResult.response;
       const usageTypes = (response.ResultsByTime ?? []).flatMap((result) =>
         (result.Groups ?? []).flatMap((group) => {
           const usageType = group.Keys?.[0];
@@ -99,6 +109,7 @@ export const awsServiceUsageTool = createTool({
       );
 
       return {
+        dataSource: cachedResult.cache,
         estimated: (response.ResultsByTime ?? []).some(
           (result) => result.Estimated ?? false
         ),

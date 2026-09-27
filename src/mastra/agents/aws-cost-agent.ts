@@ -7,16 +7,28 @@ import {
   awsCostAnalysisCodeInstructions,
   awsCostAnalysisCodeTool,
 } from '../tools/aws-cost-code-mode';
+import {
+  awsCostCachePolicyTool,
+  awsCostPeriodTool,
+} from '../tools/aws-cost-analysis-context-tools';
+import { awsCostAnalysisTool } from '../tools/aws-cost-analysis-tool';
+import { awsServiceUsageTool } from '../tools/aws-service-usage-tool';
 
 export const awsCostAgent = new Agent({
   id: 'aws-cost-agent',
   name: 'AWS Cost Analyst',
   defaultOptions: vultrHeavyAnalysisOptions,
-  instructions: `You are a read-only AWS cost analyst. For every request about AWS spend, cloud bills, or highest-cost services, use runAwsCostAnalysisCode. The generated program must call the read-only AWS billing tools it exposes before you make findings.
+  instructions: `You are a read-only AWS cost analyst. Make the work visible and sequential for every request about AWS spend, cloud bills, or highest-cost services.
 
-For detailed analysis, work in bounded passes: first establish the service-level baseline, then use awsServiceUsageTool for the highest-impact services when the returned data warrants it, and finally validate the recommendations against the returned evidence. Use runAwsCostAnalysisCode when multiple tool calls, comparisons, deterministic calculations, or hypothesis checks would make the work clearer. The generated code runs in an isolated QuickJS environment and can call only the read-only AWS tools exposed to it.
+Always use these visible tools in order: awsCostPeriodTool, awsCostCachePolicyTool, and awsCostAnalysisTool. Then use awsServiceUsageTool for the top two returned services before making recommendations. These are real read-only operations; the first two are local-only and the billing tools use the local cache unless refresh is explicitly requested.
 
-Do not run more than six AWS billing queries in one request. Reuse the available local cache through the tools. Keep private reasoning private: present concise findings, evidence, assumptions, alternatives, and validation steps instead of hidden chain-of-thought. Never invent resource-level facts, pricing, or savings estimates.
+For detailed analysis, work in bounded passes: establish the service-level baseline, inspect the top two service usage breakdowns, and validate recommendations against returned evidence. Use runAwsCostAnalysisCode only when a comparison, deterministic calculation, or hypothesis check needs code. The generated code runs in an isolated QuickJS environment and can call only the read-only AWS tools exposed to it.
+
+Do not run more than three AWS billing queries in one request. Reuse the available local cache through the tools. Keep private reasoning private: present concise findings, evidence, assumptions, alternatives, and validation steps instead of hidden chain-of-thought. Never invent resource-level facts, pricing, or savings estimates.
+
+Every tool result has dataSource metadata. If source is similar-cache, state that the current-month result was reused from the local demo cache at cachedAt; do not describe it as a fresh AWS query. If source is exact-cache, mention cached data only when it helps explain the result.
+
+The application adds the exact marker [FRESH_AWS_DATA_REQUESTED] only after the user enables its fresh-data setting. When that marker is present, pass refresh: true to every AWS billing-tool query in this run. Otherwise, omit refresh or pass false so the local cache is used.
 
 ${awsCostAnalysisCodeInstructions}
 
@@ -37,5 +49,11 @@ If a requested value was not returned by the tool, write “Not available” ins
 
 If the tool reports an AWS credential or permission error, explain the missing access and do not suggest changes to AWS resources.`,
   model: vultrInferenceModel,
-  tools: { awsCostAnalysisCodeTool },
+  tools: {
+    awsCostAnalysisCodeTool,
+    awsCostAnalysisTool,
+    awsCostCachePolicyTool,
+    awsCostPeriodTool,
+    awsServiceUsageTool,
+  },
 });

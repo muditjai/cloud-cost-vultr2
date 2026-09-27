@@ -19,9 +19,17 @@ const costAnalysisInputSchema = costPeriodInputSchema.extend({
     .max(10)
     .default(5)
     .describe('Number of highest-cost services to return.'),
+  refresh: z
+    .boolean()
+    .default(false)
+    .describe('Bypass the local cache and query AWS Cost Explorer now. Use only for an explicitly requested refresh.'),
 });
 
 const costAnalysisOutputSchema = z.object({
+  dataSource: z.object({
+    cachedAt: z.string().optional(),
+    source: z.enum(['exact-cache', 'live-aws', 'similar-cache']),
+  }),
   estimated: z.boolean(),
   period: z.object({
     endDate: z.string(),
@@ -54,7 +62,7 @@ async function getAwsCostAnalysis(
   const period = getCostPeriod(input);
 
   try {
-    const response = await getCachedCostExplorerResponse(
+    const cachedResult = await getCachedCostExplorerResponse(
       { groupBy: 'SERVICE', period },
       () =>
         costExplorer.send(
@@ -75,9 +83,11 @@ async function getAwsCostAnalysis(
               Start: period.startDate,
             },
           })
-        )
+        ),
+      { refresh: input.refresh }
     );
 
+    const response = cachedResult.response;
     const costsByService = new Map<string, number>();
     let estimated = false;
 
@@ -107,6 +117,7 @@ async function getAwsCostAnalysis(
     );
 
     return {
+      dataSource: cachedResult.cache,
       estimated,
       period,
       topServices: topServices.map(({ service, amount }) => ({

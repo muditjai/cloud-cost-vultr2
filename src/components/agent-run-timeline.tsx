@@ -1,93 +1,133 @@
-import type { UIMessage } from 'ai'
+import type { ToolUIPart, UIMessage } from 'ai';
 
-type TimelineStatus = 'complete' | 'current' | 'pending'
+import {
+  Tool,
+  ToolContent,
+  ToolHeader,
+  ToolInput,
+  ToolOutput,
+} from '@/components/ai-elements/tool';
 
-interface TimelineItem {
-  detail: string
-  id: string
-  label: string
-  status: TimelineStatus
+type RunStatus = 'complete' | 'current' | 'pending';
+
+interface ToolCall {
+  id: string;
+  label: string;
+  part: ToolUIPart;
 }
 
 function formatToolName(type: string) {
-  return type
+  const name = type
     .replace(/^tool-/, '')
-    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/([a-z])([A-Z])/g, '$1 $2');
+
+  const labels: Record<string, string> = {
+    'aws Cost Analysis Code Tool': 'Run isolated cost-analysis code',
+    'aws Cost Analysis Tool': 'Rank AWS service costs',
+    'aws Cost Cache Policy Tool': 'Check demo cache policy',
+    'aws Cost Period Tool': 'Resolve billing period',
+    'aws Service Usage Tool': 'Inspect service usage',
+  };
+
+  return labels[name] ?? name;
 }
 
-function getToolTimelineItems(messages: UIMessage[]): TimelineItem[] {
-  return messages.flatMap(message =>
+function getToolCalls(messages: UIMessage[]): ToolCall[] {
+  return messages.flatMap((message) =>
     message.parts.flatMap((part, index) => {
       if (!part.type.startsWith('tool-')) {
-        return []
+        return [];
       }
 
-      const isComplete = 'state' in part && part.state === 'output-available'
-
       return [{
-        detail: isComplete
-          ? 'Billing data returned successfully.'
-          : 'Querying read-only AWS billing data.',
         id: `${message.id}-${index}`,
         label: formatToolName(part.type),
-        status: isComplete ? 'complete' : 'current',
-      }]
-    }),
-  )
+        part: part as ToolUIPart,
+      }];
+    })
+  );
+}
+
+function RunStep({
+  detail,
+  label,
+  status,
+}: {
+  detail: string;
+  label: string;
+  status: RunStatus;
+}) {
+  const indicator = status === 'complete' ? '✓' : status === 'current' ? '•' : '–';
+
+  return (
+    <div className="flex items-start gap-3 rounded-md border bg-muted/20 px-4 py-3">
+      <span
+        className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+          status === 'complete'
+            ? 'bg-primary text-primary-foreground'
+            : status === 'current'
+              ? 'border border-primary text-primary'
+              : 'border border-border text-muted-foreground'
+        }`}
+      >
+        {indicator}
+      </span>
+      <div>
+        <p className="text-sm font-medium">{label}</p>
+        <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{detail}</p>
+      </div>
+    </div>
+  );
 }
 
 export function AgentRunTimeline({
   messages,
   status,
 }: {
-  messages: UIMessage[]
-  status: 'error' | 'ready' | 'streaming' | 'submitted'
+  messages: UIMessage[];
+  status: 'error' | 'ready' | 'streaming' | 'submitted';
 }) {
-  const toolItems = getToolTimelineItems(messages)
-  const hasStarted = status !== 'ready' || messages.length > 0
-  const hasReport = messages.some(message =>
-    message.role === 'assistant' && message.parts.some(part => part.type === 'text'),
-  )
-  const items: TimelineItem[] = [
-    {
-      detail: 'Validate the request and prepare the selected analyst.',
-      id: 'prepare',
-      label: 'Prepare agent run',
-      status: hasStarted ? 'complete' : 'current',
-    },
-    ...toolItems,
-    {
-      detail: 'Turn returned billing data into findings and recommendations.',
-      id: 'report',
-      label: 'Generate Markdown report',
-      status: hasReport ? 'complete' : hasStarted ? 'current' : 'pending',
-    },
-  ]
+  const toolCalls = getToolCalls(messages);
+  const hasStarted = status !== 'ready' || messages.length > 0;
+  const hasReport = messages.some((message) =>
+    message.role === 'assistant' && message.parts.some((part) => part.type === 'text')
+  );
 
   return (
-    <ol aria-label="Agent run timeline" className="space-y-4">
-      {items.map((item, index) => (
-        <li className="flex gap-3" key={item.id}>
-          <div className="flex flex-col items-center">
-            <span
-              className={`flex size-7 items-center justify-center rounded-full border text-xs font-semibold ${
-                item.status === 'complete'
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : item.status === 'current'
-                    ? 'border-primary text-primary'
-                    : 'border-border text-muted-foreground'
-              }`}
-            >
-              {item.status === 'complete' ? '✓' : index + 1}
-            </span>
-            {index < items.length - 1 ? <span className="mt-1 h-8 w-px bg-border" /> : null}
-          </div>
-          <div className="pb-2">
-            <p className="text-sm font-medium">{item.label}</p>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">{item.detail}</p>
-          </div>
-        </li>
-      ))}
-    </ol>
-  )
+    <div aria-label="Agent activity" className="space-y-3">
+      <RunStep
+        detail="Validate the request and prepare the selected analyst."
+        label="Prepare agent run"
+        status={hasStarted ? 'complete' : 'current'}
+      />
+
+      {toolCalls.map((toolCall) => {
+        const toolState = toolCall.part.state ?? 'input-available';
+
+        return (
+          <Tool defaultOpen={toolState !== 'output-available'} key={toolCall.id}>
+            <ToolHeader
+              className="cursor-pointer"
+              state={toolState}
+              title={toolCall.label}
+              type={toolCall.part.type}
+            />
+            <ToolContent>
+              <ToolInput input={toolCall.part.input ?? {}} />
+              <ToolOutput
+                errorText={toolCall.part.errorText}
+                output={toolCall.part.output}
+              />
+            </ToolContent>
+          </Tool>
+        );
+      })}
+
+      <RunStep
+        detail="Turn tool results into the Markdown report and recommendations."
+        label="Generate Markdown report"
+        status={hasReport ? 'complete' : hasStarted ? 'current' : 'pending'}
+      />
+    </div>
+  );
 }

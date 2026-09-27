@@ -89,10 +89,10 @@ export function AwsCostSchedulePanel({
   }
 
   return (
-    <section className="rounded-xl border bg-card p-5 shadow-sm">
+    <div className="mt-4 border-t pt-4">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="font-semibold">Automate this agent</h2>
+          <h3 className="font-medium">Schedule</h3>
           <p className="mt-1 text-sm text-muted-foreground">
             Save a recurring Mastra schedule for the selected analysis.
           </p>
@@ -140,6 +140,6 @@ export function AwsCostSchedulePanel({
       <p className="mt-4 text-xs leading-5 text-muted-foreground">
         Schedules are persisted by Mastra and run while this Node process is online. Each run uses the same read-only AWS tools as a manual run.
       </p>
-    </section>
+    </div>
   )
 }

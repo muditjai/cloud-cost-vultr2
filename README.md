@@ -26,6 +26,21 @@ Heavy analysis uses Mastra Code Mode with an isolated QuickJS runtime. Model-
 generated code can only orchestrate the registered read-only AWS tools; it has
 no filesystem, shell, process, or network access.
 
+AWS Cost Explorer results are persisted locally in `.cache/` and excluded from
+Git. For the demo, an exact query and equivalent current-month queries reuse a
+cached result for 30 days by default. The tool output identifies whether the
+data came from AWS, an exact cache hit, or a similar current-month cache hit.
+Set either value below to change the cache window (in hours):
+
+```bash
+AWS_COST_CURRENT_PERIOD_CACHE_TTL_HOURS=720
+AWS_COST_HISTORICAL_CACHE_TTL_HOURS=720
+```
+
+In the dashboard, **Run settings → Use fresh AWS data for the next run** is
+off by default. Enabling it bypasses the cache only for that run, issues
+read-only Cost Explorer calls, and updates the local cache with the result.
+
 ## Scheduled analyses
 
 The dashboard can persist a daily or weekly schedule for any cost-analysis
