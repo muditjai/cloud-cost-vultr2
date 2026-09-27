@@ -22,6 +22,26 @@ budget, set an integer from 1 through 160,000 and restart the server:
 VULTR_HEAVY_MAX_OUTPUT_TOKENS=32000
 ```
 
+### Optional sandbox verification
+
+The **Verify sandbox isolation** agent is independent of the AWS billing flow.
+It invokes a private, token-authenticated runner on the separate Vultr VX1
+sandbox VM. That runner accepts no user-supplied code and runs only a fixed
+Fibonacci, guest-identity, sibling-isolation, and teardown proof in disposable
+MicroSandbox microVMs.
+
+Configure these values only on the control-plane process; never commit them or
+place the token in browser-accessible variables:
+
+```bash
+SANDBOX_RUNNER_URL=http://10.1.96.4:8787
+SANDBOX_RUNNER_TOKEN=replace_with_a_long_random_value
+```
+
+The companion runner source and systemd unit are in `sandbox-runner/`. Bind it
+to the sandbox VM's private VPC address and allow TCP 8787 only from the
+control-plane private IP.
+
 Cost analysis uses direct, streamed read-only tools so every backend operation
 is visible in the dashboard. Account analysis resolves the period and cache
 policy, ranks services, inspects each of the top five services, and produces a

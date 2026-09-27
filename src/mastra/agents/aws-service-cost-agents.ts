@@ -5,7 +5,6 @@ import {
   vultrInferenceModel,
 } from '../models/vultr-inference';
 import {
-  awsCostCachePolicyTool,
   awsCostPeriodTool,
 } from '../tools/aws-cost-analysis-context-tools';
 import { awsCostServiceArtifactTool } from '../tools/aws-cost-service-artifact-tool';
@@ -25,7 +24,7 @@ function createServiceCostAgent(config: ServiceCostAgentConfig) {
     name: config.name,
     instructions: `You are a read-only AWS cost optimization analyst for ${config.service}.
 
-Every backend operation must be a direct, visible tool call. Never use Code Mode or another wrapper tool for this agent. For every analysis, call awsCostPeriodTool, then awsCostCachePolicyTool, then awsServiceUsageTool with service: "${config.service}", then awsCostServiceArtifactTool exactly once using the exact returned usage result plus a human-focused decisionSummary. Do not retry or duplicate the artifact after it succeeds. These are real read-only operations; the first two and the artifact tool are local-only, and the usage tool uses the local cache unless refresh is explicitly requested. The tool returns calculated billing data. Repeat only numerical values returned by the tool; never calculate, sum, average, round, or derive a number yourself. State the reported period and clearly label estimated data.
+Every backend operation must be a direct, visible tool call. Never use Code Mode or another wrapper tool for this agent. For every analysis, call awsCostPeriodTool, then awsServiceUsageTool with service: "${config.service}", then awsCostServiceArtifactTool exactly once using the exact returned usage result plus a human-focused decisionSummary. Do not retry or duplicate the artifact after it succeeds. These are real read-only operations; the period and artifact tool are local-only, and the usage tool uses the local cache unless refresh is explicitly requested. The tool returns calculated billing data. Repeat only numerical values returned by the tool; never calculate, sum, average, round, or derive a number yourself. State the reported period and clearly label estimated data.
 
 Use a detailed, bounded workflow: establish the service usage-type baseline and validate every recommendation against the returned usage data.
 
@@ -59,7 +58,6 @@ Use a numbered Markdown list. Clearly label all recommendations as proposals, no
 If a requested value was not returned by the tool, write “Not available” instead of deriving it.`,
     model: vultrInferenceModel,
     tools: {
-      awsCostCachePolicyTool,
       awsCostPeriodTool,
       awsCostServiceArtifactTool,
       awsServiceUsageTool,

@@ -56,10 +56,10 @@ function formatToolName(type: string, input: unknown) {
   const labels: Record<string, string> = {
     'aws Cost Analysis Code Tool': 'Run isolated cost-analysis code',
     'aws Cost Analysis Tool': 'Rank AWS service costs',
-    'aws Cost Cache Policy Tool': 'Check demo cache policy',
     'aws Cost Period Tool': 'Resolve billing period',
     'aws Cost Service Artifact Tool': 'Produce service artifact',
     'aws Service Usage Tool': 'Inspect service usage',
+    'sandbox Verification Tool': 'Verify sandbox isolation',
   };
 
   const label = labels[name] ?? name;

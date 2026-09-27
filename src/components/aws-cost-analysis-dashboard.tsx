@@ -16,6 +16,7 @@ import {
   Message,
   MessageContent,
 } from '@/components/ai-elements/message';
+import { Spinner } from '@/components/ui/spinner';
 
 const initialAgent = awsCostAnalysisAgents[0];
 
@@ -87,6 +88,25 @@ export function AwsCostAnalysisDashboard() {
           </p>
         </header>
 
+        {isRunning ? (
+          <div
+            aria-live="polite"
+            className="rounded-lg border border-primary/25 bg-primary/5 px-4 py-3"
+            role="status"
+          >
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <div className="flex items-center gap-2 font-medium">
+                <Spinner className="text-primary" />
+                <span>Agent is working</span>
+              </div>
+              <span className="text-xs text-muted-foreground">Streaming tool results</span>
+            </div>
+            <div className="mt-3 h-1 overflow-hidden rounded-full bg-primary/15">
+              <div className="h-full w-2/3 rounded-full bg-primary animate-pulse" />
+            </div>
+          </div>
+        ) : null}
+
         <section className="rounded-xl border bg-card p-4 shadow-sm">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
               <label className="flex-1 text-sm font-medium" htmlFor="analysis-agent">
@@ -125,7 +145,11 @@ export function AwsCostAnalysisDashboard() {
                 value={input}
               />
             </label>
-            <p className="mt-2 text-xs text-muted-foreground">Read-only: no AWS resources will be changed.</p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {activeAgentId === 'sandbox-verification-agent'
+                ? 'The verification run creates and removes disposable microVMs on the separate sandbox host.'
+                : 'Read-only: no AWS resources will be changed.'}
+            </p>
             <details className="mt-3 rounded-md border bg-muted/20 px-3 py-2">
               <summary className="cursor-pointer text-sm font-medium">
                 Run settings

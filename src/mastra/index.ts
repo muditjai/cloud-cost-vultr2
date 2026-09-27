@@ -15,6 +15,7 @@ import {
   s3CostAgent,
 } from './agents/aws-service-cost-agents';
 import { weatherAgent } from './agents/weather-agent';
+import { sandboxVerificationAgent } from './agents/sandbox-verification-agent';
 
 
 export const mastra = new Mastra({
@@ -26,6 +27,7 @@ export const mastra = new Mastra({
     loadBalancerCostAgent,
     rdsCostAgent,
     s3CostAgent,
+    sandboxVerificationAgent,
     weatherAgent,
   },
   scheduler: {

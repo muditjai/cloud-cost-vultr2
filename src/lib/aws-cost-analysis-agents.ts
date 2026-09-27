@@ -4,7 +4,14 @@ export const awsCostAnalysisAgents = [
     id: 'aws-cost-agent',
     label: 'Analyze account bill and services',
     prompt:
-      'Analyze the current AWS billing period. Identify the five highest-cost services, explain the main cost drivers visible in the billing data, and suggest which service analysis to run first.',
+      'Analyze the current AWS billing period. Identify the five highest-cost services, then deliver a prioritized, actionable cost-reduction plan. Keep detailed evidence in the service artifacts and make the final report about concrete next actions.',
+  },
+  {
+    description: 'Run a fixed proof that disposable MicroSandbox workloads are isolated from the control plane and each other.',
+    id: 'sandbox-verification-agent',
+    label: 'Verify sandbox isolation',
+    prompt:
+      'Verify the dedicated sandbox host. Run the fixed MicroSandbox proof, show the Fibonacci and guest identity evidence, confirm sibling isolation, and confirm teardown.',
   },
   {
     description: 'Analyze load balancer usage types and cost-reduction options.',
