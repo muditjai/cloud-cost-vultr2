@@ -7,6 +7,7 @@ import {
   ToolInput,
   ToolOutput,
 } from '@/components/ai-elements/tool';
+import { Spinner } from '@/components/ui/spinner';
 
 type RunStatus = 'complete' | 'current' | 'pending';
 
@@ -92,10 +93,12 @@ function getToolCalls(messages: UIMessage[]): ToolCall[] {
 function RunStep({
   detail,
   label,
+  showSpinnerWhenCurrent = false,
   status,
 }: {
   detail: string;
   label: string;
+  showSpinnerWhenCurrent?: boolean;
   status: RunStatus;
 }) {
   const indicator = status === 'complete' ? '✓' : status === 'current' ? '•' : '–';
@@ -111,7 +114,9 @@ function RunStep({
               : 'border border-border text-muted-foreground'
         }`}
       >
-        {indicator}
+        {status === 'current' && showSpinnerWhenCurrent ? (
+          <Spinner aria-label={`${label} in progress`} className="size-3 text-primary" />
+        ) : indicator}
       </span>
       <div>
         <p className="text-sm font-medium">{label}</p>
@@ -167,6 +172,7 @@ export function AgentRunTimeline({
       <RunStep
         detail="Turn tool results into the Markdown report and recommendations."
         label="Generate Markdown report"
+        showSpinnerWhenCurrent
         status={hasReport ? 'complete' : hasStarted ? 'current' : 'pending'}
       />
     </div>
