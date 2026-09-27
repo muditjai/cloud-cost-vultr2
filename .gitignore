@@ -40,6 +40,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Python bytecode generated while validating the private sandbox runner
+__pycache__/
+*.py[cod]
+
 # local Mastra storage
 mastra.db*
 mastra.duckdb*
