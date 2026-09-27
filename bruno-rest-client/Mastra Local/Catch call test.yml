@@ -1,0 +1,28 @@
+info:
+  name: Catch call test
+  type: http
+
+http:
+  method: POST
+  url: http://localhost:3000/api/agents/weather-agent/generate
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "What is your name?"
+          }
+        ]
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
