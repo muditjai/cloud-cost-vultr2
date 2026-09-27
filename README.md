@@ -14,7 +14,7 @@ VULTR_INFERENCE_API_KEY=your_vultr_inference_api_key
 
 Restart the development server after changing `.env`.
 
-The cost agents use a bounded heavy-analysis profile by default: up to eight
+The cost agents use a bounded heavy-analysis profile by default: up to 20
 agent steps and 32,000 output tokens per model response. To use a different
 budget, set an integer from 1 through 160,000 and restart the server:
 
@@ -22,9 +22,10 @@ budget, set an integer from 1 through 160,000 and restart the server:
 VULTR_HEAVY_MAX_OUTPUT_TOKENS=32000
 ```
 
-Heavy analysis uses Mastra Code Mode with an isolated QuickJS runtime. Model-
-generated code can only orchestrate the registered read-only AWS tools; it has
-no filesystem, shell, process, or network access.
+Cost analysis uses direct, streamed read-only tools so every backend operation
+is visible in the dashboard. Account analysis resolves the period and cache
+policy, ranks services, inspects each of the top five services, and produces a
+Markdown artifact for each service.
 
 AWS Cost Explorer results are persisted locally in `.cache/` and excluded from
 Git. For the demo, an exact query and equivalent current-month queries reuse a

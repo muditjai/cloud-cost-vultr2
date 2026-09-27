@@ -26,6 +26,7 @@ function formatToolName(type: string) {
     'aws Cost Analysis Tool': 'Rank AWS service costs',
     'aws Cost Cache Policy Tool': 'Check demo cache policy',
     'aws Cost Period Tool': 'Resolve billing period',
+    'aws Cost Service Artifact Tool': 'Produce service artifact',
     'aws Service Usage Tool': 'Inspect service usage',
   };
 

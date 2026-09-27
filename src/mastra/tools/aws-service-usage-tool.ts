@@ -2,7 +2,6 @@ import { GetCostAndUsageCommand } from '@aws-sdk/client-cost-explorer';
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import {
-  awsCostServices,
   costExplorer,
   costPeriodInputSchema,
   getCostPeriod,
@@ -25,7 +24,8 @@ const serviceUsageInputSchema = costPeriodInputSchema.extend({
     .default(false)
     .describe('Bypass the local cache and query AWS Cost Explorer now. Use only for an explicitly requested refresh.'),
   service: z
-    .enum(awsCostServices)
+    .string()
+    .min(1)
     .describe('The AWS service to analyze.'),
 });
 
@@ -39,7 +39,7 @@ const serviceUsageOutputSchema = z.object({
     endDate: z.string(),
     startDate: z.string(),
   }),
-  service: z.enum(awsCostServices),
+  service: z.string(),
   serviceUnblendedCostUsd: z.number(),
   topUsageTypes: z.array(
     z.object({

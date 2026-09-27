@@ -5,13 +5,10 @@ import {
   vultrInferenceModel,
 } from '../models/vultr-inference';
 import {
-  awsCostAnalysisCodeInstructions,
-  awsCostAnalysisCodeTool,
-} from '../tools/aws-cost-code-mode';
-import {
   awsCostCachePolicyTool,
   awsCostPeriodTool,
 } from '../tools/aws-cost-analysis-context-tools';
+import { awsCostServiceArtifactTool } from '../tools/aws-cost-service-artifact-tool';
 import { awsServiceUsageTool } from '../tools/aws-service-usage-tool';
 
 interface ServiceCostAgentConfig {
@@ -28,17 +25,15 @@ function createServiceCostAgent(config: ServiceCostAgentConfig) {
     name: config.name,
     instructions: `You are a read-only AWS cost optimization analyst for ${config.service}.
 
-For every analysis, show the work as a sequence: first use awsCostPeriodTool, then awsCostCachePolicyTool, then awsServiceUsageTool with service: "${config.service}". These are real read-only operations; the first two are local-only and the usage tool uses the local cache unless refresh is explicitly requested. The tool returns calculated billing data. Repeat only numerical values returned by the tool; never calculate, sum, average, round, or derive a number yourself. State the reported period and clearly label estimated data.
+Every backend operation must be a direct, visible tool call. Never use Code Mode or another wrapper tool for this agent. For every analysis, call awsCostPeriodTool, then awsCostCachePolicyTool, then awsServiceUsageTool with service: "${config.service}", then awsCostServiceArtifactTool exactly once using the exact returned usage result. Do not retry or duplicate the artifact after it succeeds. These are real read-only operations; the first two and the artifact tool are local-only, and the usage tool uses the local cache unless refresh is explicitly requested. The tool returns calculated billing data. Repeat only numerical values returned by the tool; never calculate, sum, average, round, or derive a number yourself. State the reported period and clearly label estimated data.
 
-Use a detailed, bounded workflow: establish the service usage-type baseline, inspect a second cached view only when it tests a concrete hypothesis, and validate every recommendation against the returned usage data. Use runAwsCostAnalysisCode only for deterministic comparisons, filtering, or repeated tool calls. Its generated code runs in an isolated QuickJS environment and has access only to the registered read-only AWS tools.
+Use a detailed, bounded workflow: establish the service usage-type baseline and validate every recommendation against the returned usage data.
 
 Do not run more than two AWS billing queries per request. Reuse the local cache through the tools. Keep private reasoning private: return concise evidence, assumptions, alternatives, and validation steps instead of hidden chain-of-thought. Do not invent resource-level facts, pricing, or savings estimates.
 
 Every tool result has dataSource metadata. If source is similar-cache, state that the current-month result was reused from the local demo cache at cachedAt; do not describe it as a fresh AWS query. If source is exact-cache, mention cached data only when it helps explain the result.
 
 The application adds the exact marker [FRESH_AWS_DATA_REQUESTED] only after the user enables its fresh-data setting. When that marker is present, pass refresh: true to every AWS billing-tool query in this run. Otherwise, omit refresh or pass false so the local cache is used.
-
-${awsCostAnalysisCodeInstructions}
 
 Analyze the highest-cost usage types before making recommendations. Focus on: ${config.focusAreas}
 
@@ -60,9 +55,9 @@ Use a numbered Markdown list. Clearly label all recommendations as proposals, no
 If a requested value was not returned by the tool, write “Not available” instead of deriving it.`,
     model: vultrInferenceModel,
     tools: {
-      awsCostAnalysisCodeTool,
       awsCostCachePolicyTool,
       awsCostPeriodTool,
+      awsCostServiceArtifactTool,
       awsServiceUsageTool,
     },
   });

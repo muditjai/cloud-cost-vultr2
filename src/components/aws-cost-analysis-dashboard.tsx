@@ -5,6 +5,7 @@ import { DefaultChatTransport } from 'ai';
 import { useState } from 'react';
 
 import { AgentRunTimeline } from '@/components/agent-run-timeline';
+import { AwsCostArtifacts } from '@/components/aws-cost-artifacts';
 import { AwsCostSchedulePanel } from '@/components/aws-cost-schedule-panel';
 import {
   awsCostAnalysisAgents,
@@ -66,12 +67,12 @@ export function AwsCostAnalysisDashboard() {
 
   return (
     <main className="min-h-screen bg-muted/30">
-      <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 sm:px-6">
+      <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-8 sm:px-6">
         <header className="max-w-3xl space-y-2">
           <p className="text-sm font-medium text-muted-foreground">AWS cost operations</p>
           <h1 className="text-3xl font-semibold tracking-tight">Run an agent, inspect every step</h1>
           <p className="text-sm leading-6 text-muted-foreground">
-            Start a read-only cost analysis and follow its tool calls in order. Schedule the same agent for recurring checks.
+            Start a read-only cost analysis, inspect its backend tool chain, and open the Markdown artifacts it produces.
           </p>
         </header>
 
@@ -152,6 +153,8 @@ export function AwsCostAnalysisDashboard() {
             <AgentRunTimeline messages={messages} status={status} />
           </div>
         </section>
+
+        <AwsCostArtifacts messages={messages} />
 
         <section className="rounded-xl border bg-card shadow-sm">
           <div className="border-b px-5 py-4">

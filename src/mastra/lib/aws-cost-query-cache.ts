@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import type { GetCostAndUsageCommandOutput } from '@aws-sdk/client-cost-explorer';
 
-import type { AwsCostService, CostPeriod } from './aws-cost-explorer';
+import type { CostPeriod } from './aws-cost-explorer';
 
 const CACHE_FILE_NAME = 'aws-cost-explorer-cache.json';
 const CACHE_PATH = path.join(process.cwd(), '.cache', CACHE_FILE_NAME);
@@ -40,7 +40,7 @@ interface LegacyCacheEntry {
 export interface CostExplorerCacheQuery {
   groupBy: 'SERVICE' | 'USAGE_TYPE';
   period: CostPeriod;
-  service?: AwsCostService;
+  service?: string;
 }
 
 export interface CachedCostExplorerResult {

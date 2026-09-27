@@ -41,7 +41,7 @@ function getHeavyAnalysisOutputTokens() {
 }
 
 export const vultrHeavyAnalysisOptions = {
-  maxSteps: 8,
+  maxSteps: 20,
   modelSettings: {
     maxOutputTokens: getHeavyAnalysisOutputTokens(),
     temperature: 0.2,
