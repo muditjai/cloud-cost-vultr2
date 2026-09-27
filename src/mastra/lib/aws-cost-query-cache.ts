@@ -8,8 +8,8 @@ import type { CostPeriod } from './aws-cost-explorer';
 const CACHE_FILE_NAME = 'aws-cost-explorer-cache.json';
 const CACHE_PATH = path.join(process.cwd(), '.cache', CACHE_FILE_NAME);
 const CACHE_VERSION = 2;
-const DEFAULT_CURRENT_PERIOD_TTL_HOURS = 30 * 24;
-const DEFAULT_HISTORICAL_PERIOD_TTL_HOURS = 30 * 24;
+const DEFAULT_CURRENT_PERIOD_TTL_HOURS = 90 * 24;
+const DEFAULT_HISTORICAL_PERIOD_TTL_HOURS = 90 * 24;
 const MAX_CACHE_ENTRIES = 100;
 
 type CachedCostExplorerResponse = Pick<
@@ -46,7 +46,7 @@ export interface CostExplorerCacheQuery {
 export interface CachedCostExplorerResult {
   cache: {
     cachedAt?: string;
-    source: 'exact-cache' | 'live-aws' | 'similar-cache';
+    source: 'cache-miss' | 'exact-cache' | 'live-aws' | 'similar-cache';
   };
   response: CachedCostExplorerResponse;
 }
@@ -66,6 +66,7 @@ export function getAwsCostCachePolicy() {
       DEFAULT_HISTORICAL_PERIOD_TTL_HOURS
     ),
     refreshRequiresExplicitRequest: true,
+    usesCacheOnlyByDefault: true,
   };
 }
 
@@ -93,6 +94,13 @@ export async function getCachedCostExplorerResponse(
 
   if (similarEntry) {
     return createCachedResult(similarEntry, 'similar-cache', now);
+  }
+
+  if (!options.refresh) {
+    return {
+      cache: { source: 'cache-miss' },
+      response: { ResultsByTime: [] },
+    };
   }
 
   const pendingRequest = options.refresh ? undefined : inFlightRequests.get(key);

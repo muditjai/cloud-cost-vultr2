@@ -28,6 +28,7 @@ export const awsCostCachePolicyTool = createTool({
     currentPeriodTtlHours: z.number(),
     historicalPeriodTtlHours: z.number(),
     refreshRequiresExplicitRequest: z.boolean(),
+    usesCacheOnlyByDefault: z.boolean(),
   }),
   execute: async () => getAwsCostCachePolicy(),
 });

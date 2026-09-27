@@ -30,10 +30,6 @@ const serviceUsageInputSchema = costPeriodInputSchema.extend({
 });
 
 const serviceUsageOutputSchema = z.object({
-  dataSource: z.object({
-    cachedAt: z.string().optional(),
-    source: z.enum(['exact-cache', 'live-aws', 'similar-cache']),
-  }),
   estimated: z.boolean(),
   period: z.object({
     endDate: z.string(),
@@ -48,6 +44,10 @@ const serviceUsageOutputSchema = z.object({
       usageType: z.string(),
     })
   ),
+  dataSource: z.object({
+    cachedAt: z.string().optional(),
+    source: z.enum(['cache-miss', 'exact-cache', 'live-aws', 'similar-cache']),
+  }),
 });
 
 export const awsServiceUsageTool = createTool({
@@ -109,7 +109,6 @@ export const awsServiceUsageTool = createTool({
       );
 
       return {
-        dataSource: cachedResult.cache,
         estimated: (response.ResultsByTime ?? []).some(
           (result) => result.Estimated ?? false
         ),
@@ -124,6 +123,7 @@ export const awsServiceUsageTool = createTool({
             unblendedCostUsd: toCurrency(amount),
             usageType,
           })),
+        dataSource: cachedResult.cache,
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown AWS error';

@@ -19,6 +19,16 @@ import {
 
 const initialAgent = awsCostAnalysisAgents[0];
 
+function getFinalReport(messages: ReturnType<typeof useChat>['messages']) {
+  return messages
+    .flatMap(message => (
+      message.role === 'assistant'
+        ? message.parts.filter(part => part.type === 'text').map(part => part.text)
+        : []
+    ))
+    .at(-1);
+}
+
 export function AwsCostAnalysisDashboard() {
   const [activeAgentId, setActiveAgentId] =
     useState<AwsCostAnalysisAgentId>(initialAgent.id);
@@ -36,6 +46,7 @@ export function AwsCostAnalysisDashboard() {
     agent => agent.id === activeAgentId,
   ) ?? initialAgent;
   const isRunning = status !== 'ready';
+  const finalReport = getFinalReport(messages);
 
   function selectAgent(agentId: AwsCostAnalysisAgentId) {
     const nextAgent = awsCostAnalysisAgents.find(agent => agent.id === agentId);
@@ -67,16 +78,16 @@ export function AwsCostAnalysisDashboard() {
 
   return (
     <main className="min-h-screen bg-muted/30">
-      <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-8 sm:px-6">
+      <div className="mx-auto w-full max-w-7xl space-y-4 px-4 py-6 sm:px-6">
         <header className="max-w-3xl space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">AWS cost operations</p>
-          <h1 className="text-3xl font-semibold tracking-tight">Run an agent, inspect every step</h1>
+          <p className="text-sm font-medium text-muted-foreground">Cloud financial operations</p>
+          <h1 className="text-3xl font-semibold tracking-tight">Cloud FinOps agent</h1>
           <p className="text-sm leading-6 text-muted-foreground">
-            Start a read-only cost analysis, inspect its backend tool chain, and open the Markdown artifacts it produces.
+            Analyze AWS spend with a visible, cache-first tool chain and review the cost-optimization artifacts it produces.
           </p>
         </header>
 
-        <section className="rounded-xl border bg-card p-5 shadow-sm">
+        <section className="rounded-xl border bg-card p-4 shadow-sm">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
               <label className="flex-1 text-sm font-medium" htmlFor="analysis-agent">
                 Agent
@@ -103,8 +114,8 @@ export function AwsCostAnalysisDashboard() {
                 {isRunning ? 'Agent running…' : 'Start agent'}
               </button>
             </div>
-            <p className="mt-4 text-sm text-muted-foreground">{activeAgent.description}</p>
-            <label className="mt-5 block text-sm font-medium" htmlFor="analysis-prompt">
+            <p className="mt-3 text-sm text-muted-foreground">{activeAgent.description}</p>
+            <label className="mt-4 block text-sm font-medium" htmlFor="analysis-prompt">
               Run instruction
               <textarea
                 className="mt-2 min-h-28 w-full resize-y rounded-md border bg-background p-3 text-sm outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
@@ -114,12 +125,17 @@ export function AwsCostAnalysisDashboard() {
                 value={input}
               />
             </label>
-            <p className="mt-3 text-xs text-muted-foreground">Read-only: no AWS resources will be changed.</p>
-            <details className="mt-4 rounded-md border bg-muted/20 px-3 py-2">
+            <p className="mt-2 text-xs text-muted-foreground">Read-only: no AWS resources will be changed.</p>
+            <details className="mt-3 rounded-md border bg-muted/20 px-3 py-2">
               <summary className="cursor-pointer text-sm font-medium">
                 Run settings
               </summary>
-              <label className="mt-3 flex cursor-pointer items-start gap-3 text-sm">
+              <AwsCostSchedulePanel
+                agentId={activeAgentId}
+                disabled={isRunning}
+                prompt={input}
+              />
+              <label className="mt-4 flex cursor-pointer items-start gap-3 border-t pt-4 text-sm">
                 <input
                   checked={useFreshAwsData}
                   className="mt-0.5 size-4 accent-primary"
@@ -129,27 +145,19 @@ export function AwsCostAnalysisDashboard() {
                 />
                 <span className="font-medium">Refresh</span>
               </label>
-              <AwsCostSchedulePanel
-                agentId={activeAgentId}
-                disabled={isRunning}
-                prompt={input}
-              />
             </details>
         </section>
 
-        <section className="rounded-xl border bg-card p-5 shadow-sm">
+        <section className="rounded-xl border bg-card p-4 shadow-sm">
           <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
             <div>
               <h2 className="font-semibold">Agent activity</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Expand each tool call to inspect its request, cached result, and status.
-              </p>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Demo cache reuses current-month AWS results for 30 days by default.
+            <p className="mt-1 text-sm text-muted-foreground">
+              Expand each tool call to inspect its request, result, and status.
             </p>
           </div>
-          <div className="mt-5">
+          </div>
+          <div className="mt-4">
             <AgentRunTimeline messages={messages} status={status} />
           </div>
         </section>
@@ -164,34 +172,16 @@ export function AwsCostAnalysisDashboard() {
             </p>
           </div>
           <div className="min-h-80 space-y-4 px-5 py-4">
-            {messages.length === 0 ? (
+            {!finalReport ? (
               <p className="rounded-lg border border-dashed bg-muted/40 p-6 text-sm text-muted-foreground">
                 Start an agent to collect billing data and generate a cost-analysis report.
               </p>
             ) : (
-              messages.map(message => (
-                <div key={message.id}>
-                  {message.parts.map((part, index) => {
-                    if (part.type === 'text') {
-                      const isAssistantMessage = message.role === 'assistant';
-
-                      return (
-                        <Message
-                          className={isAssistantMessage ? 'max-w-full' : 'hidden'}
-                          key={`${message.id}-${index}`}
-                          from={message.role}
-                        >
-                          <MessageContent className="w-full max-w-full">
-                            <AwsCostAnalysisReport>{part.text}</AwsCostAnalysisReport>
-                          </MessageContent>
-                        </Message>
-                      );
-                    }
-
-                    return null;
-                  })}
-                </div>
-              ))
+              <Message className="max-w-full" from="assistant">
+                <MessageContent className="w-full max-w-full">
+                  <AwsCostAnalysisReport>{finalReport}</AwsCostAnalysisReport>
+                </MessageContent>
+              </Message>
             )}
           </div>
           {error ? (

@@ -9,11 +9,18 @@ const usageTypeSchema = z.object({
 
 const dataSourceSchema = z.object({
   cachedAt: z.string().optional(),
-  source: z.enum(['exact-cache', 'live-aws', 'similar-cache']),
+  source: z.enum(['cache-miss', 'exact-cache', 'live-aws', 'similar-cache']),
+});
+
+const decisionSummarySchema = z.object({
+  firstAction: z.string().min(1),
+  keyFinding: z.string().min(1),
+  validationNeeded: z.string().min(1),
 });
 
 const artifactInputSchema = z.object({
   dataSource: dataSourceSchema,
+  decisionSummary: decisionSummarySchema,
   estimated: z.boolean(),
   period: z.object({
     endDate: z.string(),
@@ -50,9 +57,6 @@ function createArtifactId(service: string) {
 }
 
 function createArtifactMarkdown(input: z.infer<typeof artifactInputSchema>) {
-  const dataLabel = input.dataSource.source === 'live-aws'
-    ? 'Live AWS Cost Explorer result'
-    : `Local demo cache (${input.dataSource.source})`;
   const usageRows = input.topUsageTypes.length === 0
     ? '| Not available | Not available | Not available |'
     : input.topUsageTypes
@@ -63,10 +67,15 @@ function createArtifactMarkdown(input: z.infer<typeof artifactInputSchema>) {
 
   return `# ${input.service} cost analysis
 
+## Decision summary
+
+- **What matters most:** ${input.decisionSummary.keyFinding}
+- **Recommended first action:** ${input.decisionSummary.firstAction}
+- **Validate before acting:** ${input.decisionSummary.validationNeeded}
+
 ## Billing period
 
 - **Period:** ${input.period.startDate} to ${input.period.endDate}
-- **Data:** ${dataLabel}
 - **Estimated:** ${input.estimated ? 'Yes' : 'No'}
 - **Service cost:** $${input.serviceUnblendedCostUsd.toFixed(2)}
 
@@ -76,7 +85,7 @@ function createArtifactMarkdown(input: z.infer<typeof artifactInputSchema>) {
 | --- | ---: | ---: |
 ${usageRows}
 
-## Cost-reduction hypotheses
+## Cost reduction recommendations
 
 - **Configuration or right-sizing:** Validate the largest usage type against resource-level metrics before changing capacity, retention, or traffic settings.
 - **AWS alternative:** Compare the dominant usage type with an AWS architecture or pricing alternative only after confirming functional and SLA requirements.

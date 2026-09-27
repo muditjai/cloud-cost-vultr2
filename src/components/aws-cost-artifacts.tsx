@@ -58,7 +58,7 @@ export function AwsCostArtifacts({ messages }: { messages: UIMessage[] }) {
   const selectedArtifact = artifacts.find(({ id }) => id === selectedArtifactId);
 
   return (
-    <section className="rounded-xl border bg-card p-5 shadow-sm">
+    <section className="rounded-xl border bg-card p-4 shadow-sm">
       <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
         <div>
           <h2 className="font-semibold">Produced artifacts</h2>
@@ -72,11 +72,11 @@ export function AwsCostArtifacts({ messages }: { messages: UIMessage[] }) {
       </div>
 
       {artifacts.length === 0 ? (
-        <p className="mt-5 rounded-lg border border-dashed bg-muted/40 p-5 text-sm text-muted-foreground">
+        <p className="mt-4 rounded-lg border border-dashed bg-muted/40 p-4 text-sm text-muted-foreground">
           Service artifacts will appear here as their analysis tool calls complete.
         </p>
       ) : (
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
           {artifacts.map((artifact) => (
             <Artifact key={artifact.id}>
               <ArtifactHeader>
@@ -106,6 +106,11 @@ export function AwsCostArtifacts({ messages }: { messages: UIMessage[] }) {
           aria-label={`${selectedArtifact.title} artifact`}
           aria-modal="true"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4 backdrop-blur-sm"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              setSelectedArtifactId(undefined);
+            }
+          }}
           role="dialog"
         >
           <div className="max-h-[85vh] w-full max-w-5xl overflow-y-auto rounded-xl border bg-popover p-6 shadow-xl">

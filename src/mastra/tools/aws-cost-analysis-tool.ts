@@ -26,10 +26,6 @@ const costAnalysisInputSchema = costPeriodInputSchema.extend({
 });
 
 const costAnalysisOutputSchema = z.object({
-  dataSource: z.object({
-    cachedAt: z.string().optional(),
-    source: z.enum(['exact-cache', 'live-aws', 'similar-cache']),
-  }),
   estimated: z.boolean(),
   period: z.object({
     endDate: z.string(),
@@ -45,6 +41,10 @@ const costAnalysisOutputSchema = z.object({
   topServicesShareOfTotalPercent: z.number(),
   topServicesUnblendedCostUsd: z.number(),
   totalUnblendedCostUsd: z.number(),
+  dataSource: z.object({
+    cachedAt: z.string().optional(),
+    source: z.enum(['cache-miss', 'exact-cache', 'live-aws', 'similar-cache']),
+  }),
 });
 
 export const awsCostAnalysisTool = createTool({
@@ -117,7 +117,6 @@ async function getAwsCostAnalysis(
     );
 
     return {
-      dataSource: cachedResult.cache,
       estimated,
       period,
       topServices: topServices.map(({ service, amount }) => ({
@@ -131,6 +130,7 @@ async function getAwsCostAnalysis(
       ),
       topServicesUnblendedCostUsd: toCurrency(topServicesUnblendedCostUsd),
       totalUnblendedCostUsd: toCurrency(totalUnblendedCostUsd),
+      dataSource: cachedResult.cache,
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown AWS error';
